@@ -31,7 +31,7 @@ pipeline {
 
     stage('Use nodejs plugin') {
             steps {
-                nodejs('Node10') {
+                nodejs('nodejs 18.16') {
                     sh 'npm --version'
                     sh 'npm config set @opendns:registry https://engci-maven.cisco.com/artifactory/api/npm/umbrella-npm/ -g'
                     sh 'npm config ls'
@@ -40,25 +40,26 @@ pipeline {
             }
         }
 
-    stage('Install Newman') {
-            steps {
-                script {
-                    // Install Newman globally
-                    sh '''
-                        mkdir "${HOME}/.npm-global"
-                        npm config set prefix "${HOME}/.npm-global"
-                        echo 'export PATH="$PATH:${HOME}/.npm-global/bin"' >> ~/.bashrc
-                        source ~/.bashrc
-                    '''
-                    sh 'npm install -g newman'
-                }
-            }
-        }
+    // stage('Install Newman') {
+    //         steps {
+    //             script {
+    //                 // Install Newman globally
+    //                 sh '''
+    //                     mkdir "${HOME}/.npm-global"
+    //                     npm config set prefix "${HOME}/.npm-global"
+    //                     echo 'export PATH="$PATH:${HOME}/.npm-global/bin"' >> ~/.bashrc
+    //                     source ~/.bashrc
+    //                 '''
+    //                 sh 'npm install -g newman'
+    //             }
+    //         }
+    //     }
 
         stage('Run Postman Collection') {
             steps {
                 script {
                     // Run your Postman collection using Newman
+                    sh 'ls -ltrah'
                     sh 'newman run your-collection-file.json -r cli,junit --reporter-junit-export results.xml'
                 }
             }
