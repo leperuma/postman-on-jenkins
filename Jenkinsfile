@@ -60,7 +60,7 @@ pipeline {
                 script {
                     // Run your Postman collection using Newman
                     sh 'ls -ltrah'
-                    sh 'newman run your-collection-file.json -r cli,junit --reporter-junit-export results.xml'
+                    sh 'newman run AutomationTest.postman_collection.json -r cli,junit --reporter-junit-export results.xml'
                 }
             }
         }
