@@ -1,0 +1,122 @@
+{
+	"info": {
+		"_postman_id": "ef8693a3-aaad-47a4-93c8-1345de8de3d1",
+		"name": "AutomationTest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "41560825"
+	},
+	"item": [
+		{
+			"name": "Call Googly",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Check if first result contains cisco.com\", function () {",
+							"    var responseBody = pm.response.text();",
+							"    // A simple way to check if the response contains 'cisco.com'",
+							"    // Note: This is a basic check and may need adjustments for precise validation",
+							"    if (responseBody.includes(\"click\")) {",
+							"    console.log(\"click found in Google results.\");",
+							"    pm.environment.set(\"proceedToBing\", true);",
+							"    } else {",
+							"        console.log(\"click not found in Google results.\");",
+							"        pm.environment.set(\"proceedToBing\", false);",
+							"    }",
+							"    pm.expect(responseBody).to.include(\"click\");",
+							"    console.log(pm.environment.get(\"proceedToBing\"))",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "google.com/search?q=Cisco Bangalore",
+					"host": [
+						"google",
+						"com"
+					],
+					"path": [
+						"search"
+					],
+					"query": [
+						{
+							"key": "q",
+							"value": "Cisco Bangalore"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Call Bingy",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"console.log(pm.environment.get(\"proceedToBing\"))",
+							"if (!pm.environment.get(\"proceedToBing\")) {",
+							"    console.log(\"Skipping Bing request because the condition was not met.\");",
+							"    // Prevent the request from being sent by throwing an error",
+							"    throw new Error(\"Skipping Bing request\");",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Check if first result contains bing.com\", function () {",
+							"    var responseBody = pm.response.text();",
+							"    // A simple way to check if the response contains 'cisco.com'",
+							"    // Note: This is a basic check and may need adjustments for precise validation",
+							"    if (responseBody.includes(\"bing\")) {",
+							"    console.log(\"bing found in Bing results.\");",
+							"    } else {",
+							"        console.log(\"bing not found in Bing results.\");",
+							"    }",
+							"    pm.expect(responseBody).to.include(\"bing\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://www.bing.com/search?q=Cisco+Bangalore",
+					"protocol": "https",
+					"host": [
+						"www",
+						"bing",
+						"com"
+					],
+					"path": [
+						"search"
+					],
+					"query": [
+						{
+							"key": "q",
+							"value": "Cisco+Bangalore"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
