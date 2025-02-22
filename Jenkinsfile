@@ -1,8 +1,7 @@
 @Library("thor-shared-pipelines") _
 def NODE_LABEL = 'generic';
 def ENVIRONMENT = 'STAGE'
-def WORKSPACE_DIR = '/var/jenkins/IdentityInfrastructure'
-def AWS_ACCOUNT_ID = "262963343119"
+def WORKSPACE_DIR = '/var/jenkins/postman-on-jenkins'
 def CURRENT_USER = null
 
 
@@ -18,7 +17,7 @@ pipeline {
     ansiColor('xterm')
   }
   parameters {
-    string(name: 'BRANCH', defaultValue: 'dev', description: 'Enter the branch name which needs to be deployed into dev environment.')
+    string(name: 'BRANCH', defaultValue: 'main', description: 'Enter the branch name which needs to be deployed into dev environment.')
     // string(name: 'JENKINS_TF_VERSION', defaultValue: '0.13.7', description: 'Enter the inteneded terraform version.')
     // string(name: 'KUBE_REGION', defaultValue: 'us-west-2', description: 'Enter the region to upgrade.')
   }
@@ -30,10 +29,27 @@ pipeline {
       }
     }
 
+    stage('Use nodejs plugin') {
+            steps {
+                nodejs('Node10') {
+                    sh 'npm --version'
+                    sh 'npm config set @opendns:registry https://engci-maven.cisco.com/artifactory/api/npm/umbrella-npm/ -g'
+                    sh 'npm config ls'
+                    sh 'npm install -g newman'
+                }
+            }
+        }
+
     stage('Install Newman') {
             steps {
                 script {
                     // Install Newman globally
+                    sh '''
+                        mkdir "${HOME}/.npm-global"
+                        npm config set prefix "${HOME}/.npm-global"
+                        echo 'export PATH="$PATH:${HOME}/.npm-global/bin"' >> ~/.bashrc
+                        source ~/.bashrc
+                    '''
                     sh 'npm install -g newman'
                 }
             }
