@@ -1,0 +1,73 @@
+@Library("thor-shared-pipelines") _
+def NODE_LABEL = 'generic';
+def ENVIRONMENT = 'STAGE'
+def WORKSPACE_DIR = '/var/jenkins/postman-on-jenkins'
+
+defaultPlaywrightVersion = '1.43.1'
+
+def pipeline = {
+  agent {
+    node {
+      label NODE_LABEL
+      customWorkspace WORKSPACE_DIR
+    }
+  }
+
+  options {
+    ansiColor('xterm')
+  }
+  parameters {
+    string(name: 'BRANCH', defaultValue: 'main', description: 'Enter the branch name to test.')
+  }
+
+  stages {
+    stage('Clone repository') {
+      steps {
+        sh "git checkout ${params.BRANCH}"
+      }
+    }
+
+    stage('Install dependencies') {
+      steps {
+        nodejs('nodejs 18.16') {
+          sh 'npm --version'
+          sh 'npm install -g npm@latest'
+          sh 'npm install --save-dev playwright@'+defaultPlaywrightVersion
+        }
+      }
+    }
+
+    stage('Run Playwright Tests') {
+      steps {
+        nodejs('nodejs 18.16') {
+          sh 'npx playwright install --with-deps'
+          sh 'npx playwright test playwright-postman.spec.ts --reporter=junit'
+        }
+      }
+    }
+
+    stage('Archive Playwright Results') {
+      steps {
+        junit 'playwright-report/results.xml'
+      }
+    }
+  }
+
+  post {
+    always {
+      echo 'Job finished'
+      deleteDir()
+    }
+    success {
+      echo 'Playwright tests succeeded.'
+    }
+    failure {
+      echo 'Playwright tests failed.'
+    }
+    aborted {
+      echo 'Playwright tests aborted.'
+    }
+  }
+}
+
+pipeline

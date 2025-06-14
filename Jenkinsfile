@@ -58,17 +58,19 @@ pipeline {
         stage('Run Postman Collection') {
             steps {
                 script {
-                    // Run your Postman collection using Newman
+                    // Run your Postman collections using Newman
                     sh 'ls -ltrah'
-                    sh 'newman run AutomationTest.postman_collection.json -r cli,junit --reporter-junit-export results.xml'
+                    sh 'newman run AutomationTest.postman_collection.json -r cli,junit --reporter-junit-export results-automation.xml'
+                    sh 'newman run IntegrationTestingBasics.postman_collection.json -r cli,junit --reporter-junit-export results-integration.xml'
                 }
             }
         }
 
         stage('Archive Test Results') {
             steps {
-                // Archive the test result XML for reporting
-                junit 'results.xml'
+                // Archive the test result XMLs for reporting
+                junit 'results-automation.xml'
+                junit 'results-integration.xml'
             }
         }
 
