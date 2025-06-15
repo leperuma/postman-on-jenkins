@@ -2,72 +2,87 @@
 def NODE_LABEL = 'generic';
 def ENVIRONMENT = 'STAGE'
 def WORKSPACE_DIR = '/var/jenkins/postman-on-jenkins-ts'
+def defaultPlaywrightVersion = '1.43.1'
 
-defaultPlaywrightVersion = '1.43.1'
+def build_failed = false
 
-pipeline = {
-  agent {
-    node {
-      label NODE_LABEL
-      customWorkspace WORKSPACE_DIR
+def BRANCH_NAME = 'main'
+
+pipeline {
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.31.1-focal'
+            args '-u root:sudo'
+        }
     }
-  }
 
-  options {
-    ansiColor('xterm')
-  }
-  parameters {
-    string(name: 'BRANCH', defaultValue: 'main', description: 'Enter the branch name to test.')
-  }
-
-  stages {
-    stage('Clone repository') {
-      steps {
-        sh "git checkout ${params.BRANCH}"
-      }
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
     }
-    stage('Use nodejs plugin') {
+
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Enter the branch name to test.')
+    }
+
+    stages {
+        stage('Clone repository') {
             steps {
-                nodejs('nodejs 18.16') {
-                    def defaultPlaywrightVersion = "1.53.0"
-                    sh 'npm --version'
-                    sh 'npm config set @opendns:registry https://engci-maven.cisco.com/artifactory/api/npm/umbrella-npm/ -g'
-                    sh 'npm config ls'
-                    sh 'npm install -g npm@latest'
-                    sh 'npm install --save-dev playwright@'+defaultPlaywrightVersion
+                sh 'git config --global --add safe.directory ${WORKSPACE}'
+                sh "git checkout ${params.BRANCH}"
+            }
+        }
+        stage('Setup Node Environment') {
+            steps {
+                sh 'npm --version'
+                sh 'npm config set @opendns:registry https://engci-maven.cisco.com/artifactory/api/npm/umbrella-npm/ -g'
+                sh 'npm config ls'
+                sh 'npm install -g playwright@1.43.1'
+                sh 'npx playwright install'
+            }
+        }
+        stage('Run Playwright Tests') {
+            steps {
+                script {
+                    try {
+                        sh "npx playwright test playwright-postman.spec.ts --reporter=junit"
+                    } catch (err) {
+                        build_failed = true
+                        error("Playwright tests failed: ${err}")
+                    }
                 }
             }
         }
-
-    stage('Run Playwright Tests') {
-      steps {
-        nodejs('nodejs 18.16') {
-          sh 'npx playwright install --with-deps'
-          sh 'npx playwright test playwright-postman.spec.ts --reporter=junit'
+        stage('Archive Playwright Results') {
+            steps {
+                junit 'playwright-report/results.xml'
+                publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    keepAll: true,
+                    reportDir: 'playwright-report',
+                    reportFiles: 'index.html',
+                    reportName: "HTML Report",
+                ])
+            }
         }
-      }
     }
 
-    stage('Archive Playwright Results') {
-      steps {
-        junit 'playwright-report/results.xml'
-      }
+    post {
+        always {
+            echo 'Job finished'
+            deleteDir()
+            cleanWs()
+        }
+        success {
+            echo 'Playwright tests succeeded.'
+        }
+        failure {
+            echo 'Playwright tests failed.'
+        }
+        aborted {
+            echo 'Playwright tests aborted.'
+        }
     }
-  }
-
-  post {
-    always {
-      echo 'Job finished'
-      deleteDir()
-    }
-    success {
-      echo 'Playwright tests succeeded.'
-    }
-    failure {
-      echo 'Playwright tests failed.'
-    }
-    aborted {
-      echo 'Playwright tests aborted.'
-    }
-  }
 }
