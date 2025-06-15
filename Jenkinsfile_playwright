@@ -5,7 +5,7 @@ def WORKSPACE_DIR = '/var/jenkins/postman-on-jenkins-ts'
 
 defaultPlaywrightVersion = '1.43.1'
 
-def pipeline = {
+pipeline = {
   agent {
     node {
       label NODE_LABEL
@@ -29,6 +29,7 @@ def pipeline = {
     stage('Use nodejs plugin') {
             steps {
                 nodejs('nodejs 18.16') {
+                    def defaultPlaywrightVersion = "1.53.0"
                     sh 'npm --version'
                     sh 'npm config set @opendns:registry https://engci-maven.cisco.com/artifactory/api/npm/umbrella-npm/ -g'
                     sh 'npm config ls'
@@ -70,5 +71,3 @@ def pipeline = {
     }
   }
 }
-
-pipeline
