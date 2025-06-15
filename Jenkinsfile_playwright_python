@@ -1,7 +1,7 @@
 @Library("thor-shared-pipelines") _
 def NODE_LABEL = 'generic'
 def ENVIRONMENT = 'STAGE'
-def WORKSPACE_DIR = '/var/jenkins/postman-on-jenkins'
+def WORKSPACE_DIR = '/var/jenkins/postman-on-jenkins-py'
 
 pipeline {
   agent {
